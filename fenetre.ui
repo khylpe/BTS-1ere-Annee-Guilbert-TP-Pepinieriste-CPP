@@ -232,6 +232,35 @@
     </rect>
    </property>
   </widget>
+  <widget class="QWidget" name="verticalLayoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>320</x>
+     <y>230</y>
+     <width>171</width>
+     <height>101</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayoutPrice">
+    <item>
+     <widget class="QLabel" name="labelSelectPrice">
+      <property name="text">
+       <string>Selectionner le prix :</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLineEdit" name="lineEditSelectPrice"/>
+    </item>
+    <item>
+     <widget class="QPushButton" name="pushButtonValidatePrice">
+      <property name="text">
+       <string>Valider</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
  </widget>
  <resources/>
  <connections/>

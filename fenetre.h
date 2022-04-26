@@ -24,5 +24,6 @@ private slots:
     void showMainWindow();
     void selectedFeature(const QString& whatFeature);
     void buttonClicked();
+    void setPrix();
 };
 #endif // FENETRE_H
