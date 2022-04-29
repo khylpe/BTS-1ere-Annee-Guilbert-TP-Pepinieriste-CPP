@@ -8,6 +8,7 @@ connexion::connexion(QWidget *parent) :
     ui(new Ui::connexion)
 {
     ui->setupUi(this);
+    setWindowTitle("Connexion");
     QObject::connect(ui->pushButtonConnect, &QPushButton::clicked, this, &connexion::checkPassword);
     ui->lineEditPassword->setEchoMode(QLineEdit::Password); // https://stackoverflow.com/questions/5834412/using-qlineedit-for-passwords
 
@@ -34,10 +35,27 @@ void connexion::checkPassword()
             if(ui->comboBoxFeature->currentIndex()==2)
                 emit feature("Consulter");
 
+            if(ui->comboBoxFeature->currentIndex()==3)
+                emit feature("Simuler");
+
             this->hide();
             emit connected();
         }
         else
             wrongPassword.exec();
+
+}
+
+void connexion::showWindowAndMessage()
+{
+    ui->lineEditPassword->clear();
+
+
+        QMessageBox gotDisconnected;
+        gotDisconnected.setText("Vous avez été déconnécté en raison d'une inactivité prolongée, vous pouvez vous reconnecter.");
+        gotDisconnected.exec();
+         this->show();
+
+
 
 }

@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
     connexion c;
     QObject::connect(&c, SIGNAL(connected()), &w, SLOT(showMainWindow()));
     QObject::connect(&c, SIGNAL(feature(QString)), &w, SLOT(selectedFeature(QString)));
+    QObject::connect(&w, SIGNAL(disconnected()), &c, SLOT(showWindowAndMessage()));
     c.show();
     return a.exec();
 }

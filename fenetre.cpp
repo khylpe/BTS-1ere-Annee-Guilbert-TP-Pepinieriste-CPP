@@ -7,6 +7,8 @@
 #include <QSqlQuery>
 #include <QMessageBox>
 #include "QFont"
+#include "QMouseEvent"
+#include "QTimer"
 
 using namespace std;
 
@@ -15,8 +17,11 @@ fenetre::fenetre(QWidget *parent)
     , ui(new Ui::fenetre)
 {
     ui->setupUi(this);
-    ui->tableWidgetDBTable->hide();
 
+    setWindowTitle("Gestion Magasin");
+    QWidget::setMouseTracking(true); // so it doesn't work only when mouse's buttons are pressed
+    qApp->installEventFilter(this);
+    ui->tableWidgetDBTable->hide();
 
     m_db = QSqlDatabase::addDatabase("QSQLITE");
     m_db.setDatabaseName("pepinieristeDB.db"); // set the database that we want to use
@@ -24,6 +29,8 @@ fenetre::fenetre(QWidget *parent)
 
     QObject::connect(ui->pushButtonAddOrDelete, &QPushButton::clicked, this, &fenetre::buttonClicked);
     QObject::connect(ui->pushButtonValidatePrice, &QPushButton::clicked, this, &fenetre::setPrix);
+
+    connect(timer, &QTimer::timeout, this, &fenetre::timeOut);
 
     ui->tableWidgetDBTable = new QTableWidget(this);
     ui->tableWidgetDBTable->hide();
@@ -49,6 +56,13 @@ void fenetre::selectedFeature(const QString &whatFeature)
         ui->labelH1->setText("Gestion stock - Vente plantes");
         ui->labelH2->setText("Supprimer de la base de données");
         ui->labelQuantity->setText("Quantité à supprimer");
+        ui->pushButtonAddOrDelete->setText("Supprimer");
+    }
+    if(whatFeature=="Simuler"){
+        ui->labelH1->setText("Gestion stock - Simulation Vente");
+        ui->labelH2->setText("Simuler la vante de X plantes");
+        ui->labelQuantity->setText("Quantité à simuler");
+        ui->labelType->setText("Type de plante à simuler");
         ui->pushButtonAddOrDelete->setText("Supprimer");
     }
     if(whatFeature=="Consulter"){
@@ -116,20 +130,21 @@ void fenetre::selectedFeature(const QString &whatFeature)
 
 void fenetre::buttonClicked()
 {
+
+    QString type = ui->comboBoxType->currentText();
+
     QMessageBox addPriceOrNot;
     addPriceOrNot.setText("Souhaitez-vous également y ajouter un prix par unité ?");
     addPriceOrNot.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
     addPriceOrNot.setDefaultButton(QMessageBox::Yes);
 
-    if(ui->pushButtonAddOrDelete->text()=="Ajouter"){
-        QString type = ui->comboBoxType->currentText();
+    if(ui->pushButtonAddOrDelete->text()=="Ajouter"){ // It means that we are using the "add" feature
 
-        // qDebug()<<type;
 
         QSqlQuery queryCheckData;
-        queryCheckData.prepare("SELECT Type_plantes from plantes where Type_plantes = :Type_plantes"); //SQL Query that we want to execute
+        queryCheckData.prepare("SELECT Type_plantes from plantes where Type_plantes = :Type_plantes");
         queryCheckData.bindValue(":Type_plantes", type );
-        queryCheckData.exec(); // execute the prepared query
+        queryCheckData.exec();
 
         int nb = 0;
 
@@ -137,9 +152,10 @@ void fenetre::buttonClicked()
             nb++;
 
 
-        if(nb>0){
+        if(nb>0){ //Cheks if Type_plantes already exists or not. >0 means it already exists
+
             QSqlQuery checkIfPriceExists;
-            checkIfPriceExists.prepare("SELECT Prix from plantes where Type_plantes = :Type_plantes");
+            checkIfPriceExists.prepare("SELECT Prix from plantes where Type_plantes = :Type_plantes"); // Returns the price of a plante, or "" if no price has been set
             checkIfPriceExists.bindValue(":Type_plantes", type );
             checkIfPriceExists.exec(); // execute the prepared query
 
@@ -148,10 +164,10 @@ void fenetre::buttonClicked()
             while(checkIfPriceExists.next()){
                 doesPrixExist = checkIfPriceExists.value(0);
             }
-            if(doesPrixExist==""){
+            if(doesPrixExist==""){ //Price of this Type_plantes does not exist yet
                 double addPriceOrNotValue = addPriceOrNot.exec();
 
-                if(addPriceOrNotValue==4194304){
+                if(addPriceOrNotValue==4194304){ // when "Cancel" is pressed
                     ui->labelSelectPrice->hide();
                     ui->lineEditSelectPrice->hide();
                     ui->pushButtonValidatePrice->hide();
@@ -163,17 +179,37 @@ void fenetre::buttonClicked()
                     ui->spinBoxQuantity->show();
                 }
 
-                if(addPriceOrNotValue==65536){
+                if(addPriceOrNotValue==65536){ //when "no" is pressed
+                    //                    QSqlQuery createType;
+                    //                    createType.prepare("INSERT INTO plantes (Type_plantes, Quantite) VALUES (:Type_plantes, :Quantite)"); //Insert
+                    //                    createType.bindValue(":Type_plantes", type );
+                    //                    createType.bindValue(":Quantite", ui->spinBoxQuantity->value());
+                    //                    createType.exec();
 
+                    QSqlQuery queryCheckQuantity;
+                    queryCheckQuantity.prepare("SELECT Quantite from plantes where Type_plantes = :Type_plantes");
+                    queryCheckQuantity.bindValue(":Type_plantes", type );
+                    queryCheckQuantity.exec();
+                    while(queryCheckQuantity.next()){
+                        int quantite = queryCheckQuantity.value(0).toInt();
+                        int newQuantity = quantite + ui ->spinBoxQuantity->value();
 
-                    QSqlQuery createType;
-                    createType.prepare("INSERT INTO plantes (Type_plantes, Quantite) VALUES (:Type_plantes, :Quantite)"); //SQL Query that we want to execute
-                    createType.bindValue(":Type_plantes", type );
-                    createType.bindValue(":Quantite", ui->spinBoxQuantity->value());
-                    createType.exec(); // execute the prepared query
+                        // qDebug()<< quantite;
+                        // qDebug()<< ui ->spinBoxQuantity->value();
+                        // qDebug()<< newQuantity;
+
+                        QSqlQuery queryAddQuantity;
+                        queryAddQuantity.prepare("UPDATE plantes SET Quantite = :newQuantity where Type_plantes = :Type_plantes"); //SQL Query that we want to execute
+                        queryAddQuantity.bindValue(":newQuantity", newQuantity );
+                        queryAddQuantity.bindValue(":Type_plantes", type );
+                        queryAddQuantity.exec(); // execute the prepared query
+                    }
+                    QMessageBox quantityAddedWithNoPrice;
+                    quantityAddedWithNoPrice.setText("La quantité a bien été ajoutée. Aucun prix n'est ajouté à ce type de plantes");
+                    quantityAddedWithNoPrice.exec();
                 }
 
-                if(addPriceOrNotValue==16384){
+                if(addPriceOrNotValue==16384){ // when "yes" is pressed
 
                     ui->labelSelectPrice->show();
                     ui->lineEditSelectPrice->show();
@@ -184,29 +220,33 @@ void fenetre::buttonClicked()
                     ui->labelType->hide();
                     ui->comboBoxType->hide();
                     ui->spinBoxQuantity->hide();
-
-
-
-
                 }
             }
-            QSqlQuery queryCheckQuantity;
-            queryCheckQuantity.prepare("SELECT Quantite from plantes where Type_plantes = :Type_plantes"); //SQL Query that we want to execute
-            queryCheckQuantity.bindValue(":Type_plantes", type );
-            queryCheckQuantity.exec(); // execute the prepared query
-            while(queryCheckQuantity.next()){
-                int quantite = queryCheckQuantity.value(0).toInt();
-                int newQuantity = quantite + ui ->spinBoxQuantity->value();
+            else{
+                QSqlQuery queryCheckQuantity;
+                queryCheckQuantity.prepare("SELECT Quantite from plantes where Type_plantes = :Type_plantes");
+                queryCheckQuantity.bindValue(":Type_plantes", type );
+                queryCheckQuantity.exec(); // execute the prepared query
+                while(queryCheckQuantity.next()){
+                    int quantite = queryCheckQuantity.value(0).toInt();
+                    int newQuantity = quantite + ui ->spinBoxQuantity->value();
 
-                qDebug()<< quantite;
-                qDebug()<< ui ->spinBoxQuantity->value();
-                qDebug()<< newQuantity;
-                QSqlQuery queryCheckAddQuantity;
-                queryCheckAddQuantity.prepare("UPDATE plantes SET Quantite = :newQuantity where Type_plantes = :Type_plantes"); //SQL Query that we want to execute
-                queryCheckAddQuantity.bindValue(":newQuantity", newQuantity );
-                queryCheckAddQuantity.bindValue(":Type_plantes", type );
-                queryCheckAddQuantity.exec(); // execute the prepared query
+                    // qDebug()<< quantite;
+                    // qDebug()<< ui ->spinBoxQuantity->value();
+                    // qDebug()<< newQuantity;
+
+                    QSqlQuery queryCheckAddQuantity;
+                    queryCheckAddQuantity.prepare("UPDATE plantes SET Quantite = :newQuantity where Type_plantes = :Type_plantes"); //SQL Query that we want to execute
+                    queryCheckAddQuantity.bindValue(":newQuantity", newQuantity );
+                    queryCheckAddQuantity.bindValue(":Type_plantes", type );
+                    queryCheckAddQuantity.exec(); // execute the prepared query
+                }
+                QMessageBox quantityAddedPrice;
+                quantityAddedPrice.setText("La quantité a bien été ajoutée.");
+                quantityAddedPrice.exec();
             }
+
+
         }
         else{
 
@@ -233,6 +273,10 @@ void fenetre::buttonClicked()
                 createType.bindValue(":Type_plantes", type );
                 createType.bindValue(":Quantite", ui->spinBoxQuantity->value());
                 createType.exec(); // execute the prepared query
+
+                QMessageBox quantityAddedWithType;
+                quantityAddedWithType.setText("Ce type de plantes à bien été ajouté, sa quantité également.");
+                quantityAddedWithType.exec();
             }
 
             if(addPriceOrNotValue==16384){
@@ -246,56 +290,57 @@ void fenetre::buttonClicked()
                 ui->labelType->hide();
                 ui->comboBoxType->hide();
                 ui->spinBoxQuantity->hide();
-
-
-
-
             }
         }
-        if(ui->pushButtonAddOrDelete->text()=="Supprimer"){
-            QString type = ui->comboBoxType->currentText();
+    }
+    if(ui->pushButtonAddOrDelete->text()=="Supprimer"){
+        QString type = ui->comboBoxType->currentText();
 
-            // qDebug()<<type;
+        qDebug()<<type;
 
-            QSqlQuery queryCheckData;
-            queryCheckData.prepare("SELECT Type_plantes from plantes where Type_plantes = :Type_plantes"); //SQL Query that we want to execute
-            queryCheckData.bindValue(":Type_plantes", type );
-            queryCheckData.exec(); // execute the prepared query
+        QSqlQuery queryCheckData;
+        queryCheckData.prepare("SELECT Type_plantes from plantes where Type_plantes = :Type_plantes"); //SQL Query that we want to execute
+        queryCheckData.bindValue(":Type_plantes", type );
+        queryCheckData.exec(); // execute the prepared query
 
-            int nb = 0;
+        int nb = 0;
 
-            while (queryCheckData.next())
-                nb++;
+        while (queryCheckData.next())
+            nb++;
 
-            if(nb>0){
-                QSqlQuery queryCheckQuantity;
-                queryCheckQuantity.prepare("SELECT Quantite from plantes where Type_plantes = :Type_plantes"); //SQL Query that we want to execute
-                queryCheckQuantity.bindValue(":Type_plantes", type );
-                queryCheckQuantity.exec(); // execute the prepared query
-                while(queryCheckQuantity.next()){
-                    int quantite = queryCheckQuantity.value(0).toInt();
-                    int newQuantity = quantite - ui ->spinBoxQuantity->value();
+        if(nb>0){
+            QSqlQuery queryCheckQuantity;
+            queryCheckQuantity.prepare("SELECT Quantite from plantes where Type_plantes = :Type_plantes"); //SQL Query that we want to execute
+            queryCheckQuantity.bindValue(":Type_plantes", type );
+            queryCheckQuantity.exec(); // execute the prepared query
+            while(queryCheckQuantity.next()){
+                int quantite = queryCheckQuantity.value(0).toInt();
+                int newQuantity = quantite - ui ->spinBoxQuantity->value();
 
-                    qDebug()<< quantite;
-                    qDebug()<< ui ->spinBoxQuantity->value();
-                    qDebug()<< newQuantity;
+                qDebug()<< quantite;
+                qDebug()<< ui ->spinBoxQuantity->value();
+                qDebug()<< newQuantity;
 
-                    QSqlQuery queryCheckRemoveQuantity;
-                    queryCheckRemoveQuantity.prepare("UPDATE plantes SET Quantite = :newQuantity where Type_plantes = :Type_plantes"); //SQL Query that we want to execute
-                    queryCheckRemoveQuantity.bindValue(":newQuantity", newQuantity );
-                    queryCheckRemoveQuantity.bindValue(":Type_plantes", type );
-                    queryCheckRemoveQuantity.exec(); // execute the prepared query
-                }
+                QSqlQuery queryCheckRemoveQuantity;
+                queryCheckRemoveQuantity.prepare("UPDATE plantes SET Quantite = :newQuantity where Type_plantes = :Type_plantes"); //SQL Query that we want to execute
+                queryCheckRemoveQuantity.bindValue(":newQuantity", newQuantity );
+                queryCheckRemoveQuantity.bindValue(":Type_plantes", type );
+                queryCheckRemoveQuantity.exec(); // execute the prepared query
             }
-            else{
-                QMessageBox notInDB;
-                notInDB.setText("Impossible de réduire la quantité d'un produit qui n'est pas en stock.");
-                notInDB.exec();
-            }
+            QMessageBox quantityRemoved;
+            quantityRemoved.setText("La quantité a bien été retirée.");
+            quantityRemoved.exec();
         }
-
+        else{
+            QMessageBox notInDB;
+            notInDB.setText("Impossible de réduire la quantité d'un produit qui n'est pas en stock.");
+            notInDB.exec();
+        }
     }
 
+    if(ui->pushButtonAddOrDelete->text()=="Simuler"){
+
+    }
 }
 
 void fenetre::setPrix()
@@ -320,7 +365,7 @@ void fenetre::setPrix()
         queryCheckQuantity.exec(); // execute the prepared query
         while(queryCheckQuantity.next()){
             int quantite = queryCheckQuantity.value(0).toInt();
-            int newQuantity = quantite - ui ->spinBoxQuantity->value();
+            int newQuantity = quantite + ui ->spinBoxQuantity->value();
 
             QSqlQuery createPrice;
             createPrice.prepare("UPDATE plantes SET Quantite = :Quantite , Prix = :Prix where Type_plantes = :Type_plantes"); //SQL Query that we want to execute
@@ -329,6 +374,10 @@ void fenetre::setPrix()
             createPrice.bindValue(":Prix", ui->lineEditSelectPrice->text().toFloat());
             createPrice.exec(); // execute the prepared query
         }
+
+        QMessageBox quantityAddedWithPrice;
+        quantityAddedWithPrice.setText("La quantité et le prix ont bien été ajoutés.");
+        quantityAddedWithPrice.exec();
     }
     else{
         QSqlQuery createTypeAndPrice;
@@ -337,6 +386,10 @@ void fenetre::setPrix()
         createTypeAndPrice.bindValue(":Quantite", ui->spinBoxQuantity->value());
         createTypeAndPrice.bindValue(":Prix", ui->lineEditSelectPrice->text().toFloat());
         createTypeAndPrice.exec(); // execute the prepared query
+
+        QMessageBox quantityAddedWithPriceAndType;
+        quantityAddedWithPriceAndType.setText("Ce type de plante a été ajouté, avec son prix. La quantité a également été ajoutée.");
+        quantityAddedWithPriceAndType.exec();
 
 
     }
@@ -350,5 +403,33 @@ void fenetre::setPrix()
     ui->labelType->show();
     ui->comboBoxType->show();
     ui->spinBoxQuantity->show();
+
+}
+
+
+
+bool fenetre::eventFilter(QObject *obj, QEvent *event) //https://stackoverflow.com/questions/1935021/getting-mousemoveevents-in-qt
+{
+    if ((event->type() == QEvent::MouseMove or
+         event->type() == QEvent::MouseButtonPress or
+         event->type() == QEvent::MouseButtonDblClick)
+            && isActiveWindow())
+    {
+        QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+
+
+
+
+        timer->start(300000);
+        qDebug()<<QString("Mouse move (%1,%2)").arg(mouseEvent->pos().x()).arg(mouseEvent->pos().y());
+    }
+    return false;
+}
+
+void fenetre::timeOut()
+{
+    if(isActiveWindow())
+        emit disconnected();
+    this->hide();
 
 }

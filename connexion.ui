@@ -18,8 +18,8 @@
     <rect>
      <x>280</x>
      <y>20</y>
-     <width>146</width>
-     <height>25</height>
+     <width>187</width>
+     <height>33</height>
     </rect>
    </property>
    <property name="text">
@@ -84,6 +84,11 @@
    <item>
     <property name="text">
      <string>Consulter la base de données</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Simuler vente</string>
     </property>
    </item>
   </widget>

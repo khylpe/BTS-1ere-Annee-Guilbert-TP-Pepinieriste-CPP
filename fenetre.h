@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QSqlDatabase>
+#include "QTimer"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class fenetre; }
@@ -14,6 +15,7 @@ class fenetre : public QWidget
 
 public:
     fenetre(QWidget *parent = nullptr);
+    QTimer *timer = new QTimer(this);
     ~fenetre();
 
 private:
@@ -25,5 +27,15 @@ private slots:
     void selectedFeature(const QString& whatFeature);
     void buttonClicked();
     void setPrix();
+    bool eventFilter(QObject *obj, QEvent *event);
+    void timeOut();
+
+signals:
+    void disconnected();
+
+
+public slots:
+
+
 };
 #endif // FENETRE_H

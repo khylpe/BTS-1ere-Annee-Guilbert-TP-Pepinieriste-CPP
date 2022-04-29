@@ -23,6 +23,7 @@ private:
 
 private slots:
     void checkPassword();
+    void showWindowAndMessage();
 
 signals:
     void connected();
