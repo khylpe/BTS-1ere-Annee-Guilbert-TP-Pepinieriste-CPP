@@ -91,6 +91,11 @@
      <string>Simuler vente</string>
     </property>
    </item>
+   <item>
+    <property name="text">
+     <string>Modifier le prix d'une plante</string>
+    </property>
+   </item>
   </widget>
   <widget class="QPushButton" name="pushButtonConnect">
    <property name="geometry">

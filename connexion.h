@@ -25,6 +25,8 @@ private slots:
     void checkPassword();
     void showWindowAndMessage();
 
+    void on_lineEditPassword_returnPressed();
+
 signals:
     void connected();
     void feature(const QString& whatFeature);
