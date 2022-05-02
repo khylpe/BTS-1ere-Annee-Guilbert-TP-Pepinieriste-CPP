@@ -30,6 +30,10 @@ private slots:
     bool eventFilter(QObject *obj, QEvent *event);
     void timeOut();
 
+    void on_lineEditSelectPrice_returnPressed();
+
+    void on_pushButtonTest_clicked();
+
 signals:
     void disconnected();
 

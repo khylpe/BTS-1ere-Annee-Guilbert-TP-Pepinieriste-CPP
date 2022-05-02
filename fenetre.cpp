@@ -19,28 +19,36 @@ fenetre::fenetre(QWidget *parent)
     ui->setupUi(this);
 
     setWindowTitle("Gestion Magasin");
+
     QWidget::setMouseTracking(true); // so it doesn't work only when mouse's buttons are pressed
     qApp->installEventFilter(this);
-    ui->tableWidgetDBTable->hide();
-
-    m_db = QSqlDatabase::addDatabase("QSQLITE");
-    m_db.setDatabaseName("pepinieristeDB.db"); // set the database that we want to use
-    m_db.open(); // boolean (1 or 0) ; 1 if the database has been succesfully opened ; 0 if the database couldn't be open
 
     QObject::connect(ui->pushButtonAddOrDelete, &QPushButton::clicked, this, &fenetre::buttonClicked);
     QObject::connect(ui->pushButtonValidatePrice, &QPushButton::clicked, this, &fenetre::setPrix);
-
     connect(timer, &QTimer::timeout, this, &fenetre::timeOut);
 
+    ui->tableWidgetDBTable->hide();
     ui->tableWidgetDBTable = new QTableWidget(this);
     ui->tableWidgetDBTable->hide();
-
+    ui->lineEditSelectPrice->setValidator(new QDoubleValidator(0, 10000, 2, this));
     ui->labelSelectPrice->hide();
     ui->lineEditSelectPrice->hide();
     ui->pushButtonValidatePrice->hide();
     ui->lcdNumberSimulationReseult->hide();
     ui->labelSimulation->hide();
     ui->labelEuro->hide();
+    ui->tableWidgetDBTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    qApp->setStyleSheet("QPushButton#pushButtonTest { color: #fff }");
+    ui->pushButtonTest->setStyleSheet("color: #fff;"
+                                      "background-color: #dc3545;"
+                                      "border: 2px solid;"
+                                      "");
+
+
+
+    m_db = QSqlDatabase::addDatabase("QSQLITE");
+    m_db.setDatabaseName("pepinieristeDB.db"); // set the database that we want to use
+    m_db.open(); // boolean (1 or 0) ; 1 if the database has been succesfully opened ; 0 if the database couldn't be open
 }
 
 fenetre::~fenetre()
@@ -201,31 +209,6 @@ void fenetre::buttonClicked()
     queryCheckPrice.prepare("SELECT Prix from plantes where Type_plantes = :Type_plantes");
     queryCheckPrice.bindValue(":Type_plantes", type );
 
-
-
-    if(ui->pushButtonAddOrDelete->text()=="Modifier"){
-
-        queryCheckData.exec();
-        int nb = 0;
-
-        while (queryCheckData.next())
-            nb++;
-
-        if(nb>0){
-            ui->labelSelectPrice->show();
-            ui->lineEditSelectPrice->show();
-            ui->pushButtonValidatePrice->show();
-
-            ui->tableWidgetDBTable->hide();
-            ui->labelQuantity->hide();
-            ui->labelType->hide();
-            ui->comboBoxType->hide();
-            ui->spinBoxQuantity->hide();
-            ui->pushButtonAddOrDelete->hide();
-        }
-        else
-            notInDB.exec();
-    }
 
     if(ui->pushButtonAddOrDelete->text()=="Ajouter"){ // It means that we are using the "add" feature
 
@@ -431,6 +414,31 @@ void fenetre::buttonClicked()
             }
         }
     }
+
+    if(ui->pushButtonAddOrDelete->text()=="Modifier"){
+
+        queryCheckData.exec();
+        int nb = 0;
+
+        while (queryCheckData.next())
+            nb++;
+
+        if(nb>0){
+            ui->labelSelectPrice->show();
+            ui->lineEditSelectPrice->show();
+            ui->pushButtonValidatePrice->show();
+
+            ui->tableWidgetDBTable->hide();
+            ui->labelQuantity->hide();
+            ui->labelType->hide();
+            ui->comboBoxType->hide();
+            ui->spinBoxQuantity->hide();
+            ui->pushButtonAddOrDelete->hide();
+        }
+        else
+            notInDB.exec();
+    }
+
 }
 
 void fenetre::setPrix()
@@ -554,5 +562,20 @@ void fenetre::timeOut(){
 void fenetre::on_lineEditSelectPrice_returnPressed()
 {
     setPrix();
+}
+
+
+void fenetre::on_pushButtonTest_clicked()     //https://prograide.com/pregunta/28710/comment-quitter-correctement-un-programme-qt
+{
+    QMessageBox logout;
+    logout.setText("Voulez-vous vraiment quitter cette super application ?");
+    logout.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+    logout.setDefaultButton(QMessageBox::Cancel);
+
+    if(logout.exec()==16384){
+        exit(EXIT_FAILURE);
+        QApplication::quit();
+        QCoreApplication::quit();
+    }
 }
 
