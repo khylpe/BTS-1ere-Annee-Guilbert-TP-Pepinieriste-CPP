@@ -578,4 +578,3 @@ void fenetre::on_pushButtonTest_clicked()     //https://prograide.com/pregunta/2
         QCoreApplication::quit();
     }
 }
-
