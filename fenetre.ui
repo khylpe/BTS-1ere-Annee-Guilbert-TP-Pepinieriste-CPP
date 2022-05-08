@@ -303,26 +303,6 @@
     <string>Deconnexion</string>
    </property>
   </widget>
-  <widget class="QTabWidget" name="pane">
-   <property name="geometry">
-    <rect>
-     <x>580</x>
-     <y>470</y>
-     <width>127</width>
-     <height>80</height>
-    </rect>
-   </property>
-   <widget class="QWidget" name="tab">
-    <attribute name="title">
-     <string>Tab 1</string>
-    </attribute>
-   </widget>
-   <widget class="QWidget" name="tab_2">
-    <attribute name="title">
-     <string>Tab 2</string>
-    </attribute>
-   </widget>
-  </widget>
  </widget>
  <resources/>
  <connections/>

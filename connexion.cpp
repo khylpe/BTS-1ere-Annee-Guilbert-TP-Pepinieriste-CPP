@@ -50,8 +50,7 @@ void connexion::checkPassword(){
         wrongPassword.exec();
 }
 
-void connexion::showWindowAndMessage()
-{
+void connexion::showWindowAndMessage(){
     ui->lineEditPassword->clear();
     QMessageBox gotDisconnected;
     gotDisconnected.setText("Vous avez été déconnécté en raison d'une inactivité prolongée, vous pouvez vous reconnecter.");
@@ -59,8 +58,7 @@ void connexion::showWindowAndMessage()
     this->show();
 }
 
-void connexion::on_lineEditPassword_returnPressed()
-{
+void connexion::on_lineEditPassword_returnPressed(){
     checkPassword();
 }
 

@@ -27,12 +27,11 @@ private slots:
     void selectedFeature(const QString& whatFeature);
     void buttonClicked();
     void setPrix();
-    bool eventFilter(QObject *obj, QEvent *event);
     void timeOut();
-
     void on_lineEditSelectPrice_returnPressed();
-
     void on_pushButtonTest_clicked();
+
+    bool eventFilter(QObject *obj, QEvent *event);
 
 signals:
     void disconnected();

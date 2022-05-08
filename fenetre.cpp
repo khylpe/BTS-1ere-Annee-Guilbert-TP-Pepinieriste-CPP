@@ -51,18 +51,15 @@ fenetre::fenetre(QWidget *parent)
     m_db.open(); // boolean (1 or 0) ; 1 if the database has been succesfully opened ; 0 if the database couldn't be open
 }
 
-fenetre::~fenetre()
-{
+fenetre::~fenetre(){
     delete ui;
 }
 
-void fenetre::showMainWindow()
-{
+void fenetre::showMainWindow(){
     this->show();
 }
 
-void fenetre::selectedFeature(const QString &whatFeature)
-{
+void fenetre::selectedFeature(const QString &whatFeature){
 
     if(whatFeature=="Delete"){
         ui->labelH1->setText("Gestion stock - Vente plantes");
@@ -154,8 +151,7 @@ void fenetre::selectedFeature(const QString &whatFeature)
     }
 }
 
-void fenetre::buttonClicked()
-{
+void fenetre::buttonClicked(){
     QString type = ui->comboBoxType->currentText();
     QVariant doesPrixExist;
 
@@ -221,23 +217,17 @@ void fenetre::buttonClicked()
 
             else{
                 queryCheckData.exec();
-
                 int nb = 0;
 
                 while (queryCheckData.next())
                     nb++;
 
-
                 if(nb>0){ //Cheks if Type_plantes already exists or not. >0 means it already exists
-
-
                     queryCheckPrice.exec(); // execute the prepared query
 
-
-
-                    while(queryCheckPrice.next()){
+                    while(queryCheckPrice.next())
                         doesPrixExist = queryCheckPrice.value(0);
-                    }
+
                     if(doesPrixExist==""){ //Price of this Type_plantes does not exist yet
                         double addPriceOrNotValue = addPriceOrNot.exec();
 
@@ -267,7 +257,6 @@ void fenetre::buttonClicked()
                                 queryAddQuantity.exec(); // execute the prepared query
 
                             }
-
                             quantityAddedWithNoPrice.exec();
                         }
 
@@ -377,12 +366,10 @@ void fenetre::buttonClicked()
     }
 
     if(ui->pushButtonAddOrDelete->text()=="Simuler"){
-
         if(ui->comboBoxType->currentIndex()==0)
             mustSelectAType.exec();
 
         else{
-
             if(ui->spinBoxQuantity->value()==0)
                 mustSelectAQuantity.exec();
 
@@ -416,7 +403,6 @@ void fenetre::buttonClicked()
     }
 
     if(ui->pushButtonAddOrDelete->text()=="Modifier"){
-
         queryCheckData.exec();
         int nb = 0;
 
@@ -438,11 +424,9 @@ void fenetre::buttonClicked()
         else
             notInDB.exec();
     }
-
 }
 
-void fenetre::setPrix()
-{
+void fenetre::setPrix(){
     int quantite = ui->spinBoxQuantity->value();
     QString type = ui->comboBoxType->currentText();
 
@@ -471,8 +455,6 @@ void fenetre::setPrix()
     QMessageBox quantityAddedWithPriceAndType;
     quantityAddedWithPriceAndType.setText("Ce type de plante a été ajouté, avec son prix. La quantité a également été ajoutée.");
 
-
-
     QSqlQuery queryChangePrice;
     queryChangePrice.prepare("UPDATE plantes SET Prix = :Prix where Type_plantes = :Type_plantes");
     queryChangePrice.bindValue(":Type_plantes", type );
@@ -498,7 +480,6 @@ void fenetre::setPrix()
                 createPrice.bindValue(":Prix", newPrice);
                 createPrice.exec(); // execute the prepared query
             }
-
             quantityAddedWithPrice.exec();
         }
         else{
@@ -540,8 +521,7 @@ void fenetre::setPrix()
     ui->pushButtonAddOrDelete->show();
 }
 
-bool fenetre::eventFilter(QObject *obj, QEvent *event) //https://stackoverflow.com/questions/1935021/getting-mousemoveevents-in-qt
-{
+bool fenetre::eventFilter(QObject *obj, QEvent *event){ //https://stackoverflow.com/questions/1935021/getting-mousemoveevents-in-qt
     if ((event->type() == QEvent::MouseMove or
          event->type() == QEvent::MouseButtonPress or
          event->type() == QEvent::MouseButtonDblClick)
@@ -559,14 +539,13 @@ void fenetre::timeOut(){
     this->hide();
 }
 
-void fenetre::on_lineEditSelectPrice_returnPressed()
-{
+void fenetre::on_lineEditSelectPrice_returnPressed(){
     setPrix();
 }
 
 
-void fenetre::on_pushButtonTest_clicked()     //https://prograide.com/pregunta/28710/comment-quitter-correctement-un-programme-qt
-{
+void fenetre::on_pushButtonTest_clicked(){     //https://prograide.com/pregunta/28710/comment-quitter-correctement-un-programme-qt
+
     QMessageBox logout;
     logout.setText("Voulez-vous vraiment quitter cette super application ?");
     logout.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
